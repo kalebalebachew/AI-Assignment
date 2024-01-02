@@ -8,7 +8,8 @@ st.set_page_config(layout="wide")
 
 st.subheader('Group Members of This Project')
 group_members_data = {
-    'Name': ['Kaleb Alebachew', 'Natnael Malike', 'Kalkidan Tadesse', 'Mikiyas Mesfin', 'Tewodros Million']
+    'Name': ['Kaleb Alebachew', 'Natnael Malike', 'Kalkidan Tadesse', 'Mikiyas Mesfin', 'Tewodros Million'],
+    'ID' : ['1539/13', '2166/13', '1559/13', '4731/13', '2675/13']
 }
 group_members_table = st.table(group_members_data)
 
