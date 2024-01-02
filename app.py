@@ -5,7 +5,7 @@ import itertools
 import random
 
 st.set_page_config(layout="wide")
-
+st.subheader('AI-Driven Book Recommendation System Made By Haramaya University Students')
 st.subheader('Group Members of This Project')
 group_members_data = {
     'Name': ['Kaleb Alebachew', 'Natnael Malike', 'Kalkidan Tadesse', 'Mikiyas Mesfin', 'Tewodros Million'],
