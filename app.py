@@ -6,14 +6,20 @@ import random
 
 st.set_page_config(layout="wide")
 
+st.subheader('Group Members of This Project')
+group_members_data = {
+    'Name': ['Kaleb Alebachew', 'Natnael Malike', 'Kalkidan Tadesse', 'Mikiyas Mesfin', 'Tewodros Million']
+}
+group_members_table = st.table(group_members_data)
+
 # load the dataset with the books
 df_books = pd.read_csv('data/BX-Books.csv', sep=';', encoding='latin-1')
 df_books_ratings = pd.read_csv('data/BX-Book-Ratings-Subset.csv', sep=';', encoding='latin-1')
 df_users = pd.read_csv('data/BX-Users.csv', sep=';', encoding='latin-1')
 
-# select a book to kickstart the interface
+# Initialize session_state if not present
 if 'ISBN' not in st.session_state:
-  st.session_state['ISBN'] = '0385486804'
+    st.session_state['ISBN'] = '0385486804'
 
 # select a user to kickstart
 if 'User-ID' not in st.session_state:
@@ -23,15 +29,6 @@ if 'User-ID' not in st.session_state:
 if 'Friends' not in st.session_state:
   st.session_state['Friends'] = [277427, 278026, 277523, 276680]
 
-# show the consent message only the first time
-if 'Consent' not in st.session_state:
-  st.info('We respect your data. Our policy complies with the GDPR. We use pseudonymisation and encryption to collect your personal data and to use them \
-          only for recommendations purposes. By clicking ok you consent to these terms ')
-  data_consent_button = st.button("Ok")
-  placeholder = st.empty()
-  st.session_state['Consent'] = True
-  if data_consent_button: 
-    placeholder.empty()
 
 # initializations
 friends_list = [277427, 278026, 277523, 276680]
