@@ -5,9 +5,7 @@ import itertools
 import random
 
 st.set_page_config(layout="wide")
-header_image_url = "C:\\Users\\kaleb\\Downloads\\AI-Assignment\\hu1-logo.png"
 
-st.image(header_image_url, use_column_width=True)
 st.subheader('AI-Driven Book Recommendation System Made By Haramaya University Students')
 st.subheader('Group Members of This Project')
 group_members_data = {
