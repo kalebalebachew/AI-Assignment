@@ -1,11 +1,9 @@
-
-
-
 import numpy as np
 import pandas as pd
 
-books = pd.read_csv("/content/BX_Books.csv", encoding='latin-1', error_bad_lines=False, sep=';')
-ratings = pd.read_csv("/content/BX-Book-Ratings.csv", encoding='latin-1', error_bad_lines=False, sep=';')
+books = pd.read_csv("data/BX_Books.csv", encoding='latin-1', error_bad_lines=False, sep=';')
+ratings = pd.read_csv("data/BX-Book-Ratings.csv", encoding='latin-1', error_bad_lines=False, sep=';')
+
 
 books.columns = ['ISBN', 'bookTitle', 'bookAuthor', 'yearOfPublication', 'publisher', 'imageUrlS', 'imageUrlM', 'imageUrlL']
 
