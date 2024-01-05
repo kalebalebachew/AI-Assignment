@@ -1,135 +1,100 @@
-import streamlit as st
+
+
+
+import numpy as np
 import pandas as pd
-import template as t
-import itertools
-import random
 
-st.set_page_config(layout="wide")
+books = pd.read_csv("/content/BX_Books.csv", encoding='latin-1', error_bad_lines=False, sep=';')
+ratings = pd.read_csv("/content/BX-Book-Ratings.csv", encoding='latin-1', error_bad_lines=False, sep=';')
 
-st.subheader('AI-Driven Book Recommendation System Made By Haramaya University Students')
-st.subheader('Group Members of This Project')
-group_members_data = {
-    'Name': ['Kaleb Alebachew', 'Natnael Malike', 'Kalkidan Tadesse', 'Mikiyas Mesfin', 'Tewodros Million'],
-    'ID' : ['1539/13', '2166/13', '1559/13', '4731/13', '2675/13']
-}
-group_members_table = st.table(group_members_data)
+books.columns = ['ISBN', 'bookTitle', 'bookAuthor', 'yearOfPublication', 'publisher', 'imageUrlS', 'imageUrlM', 'imageUrlL']
 
-# load the dataset with the books
-df_books = pd.read_csv('data/BX-Books.csv', sep=';', encoding='latin-1')
-df_books_ratings = pd.read_csv('data/BX-Book-Ratings-Subset.csv', sep=';', encoding='latin-1')
-df_users = pd.read_csv('data/BX-Users.csv', sep=';', encoding='latin-1')
+ratings.columns = ['userID', 'ISBN', 'bookRating']
 
-# Initialize session_state if not present
-if 'ISBN' not in st.session_state:
-    st.session_state['ISBN'] = '0385486804'
+ratings = ratings.set_index("ISBN")
 
-# select a user to kickstart
-if 'User-ID' not in st.session_state:
-  st.session_state['User-ID'] = 98783	
+books = books.set_index("ISBN")
 
-# fill the friends list to start the recommendations
-if 'Friends' not in st.session_state:
-  st.session_state['Friends'] = [277427, 278026, 277523, 276680]
+books.head()
 
-
-# initializations
-friends_list = [277427, 278026, 277523, 276680]
-df_book = df_books[df_books['ISBN'] == st.session_state['ISBN']]
-dict_isbn_groups = df_books_ratings.groupby(['ISBN'])['User-ID'].aggregate(lambda x: list(x))
-
-def jaccard_distance(user_ids_isbn_a, user_ids_isbn_b):
-                
-    set_isbn_a = set(user_ids_isbn_a)
-    set_isbn_b = set(user_ids_isbn_b)
-    
-    union = set_isbn_a.union(set_isbn_b)
-    intersection = set_isbn_a.intersection(set_isbn_b)
-        
-    return len(intersection) / float(len(union))
-
-# create a cover and info column to display the selected book
-cover, info = st.columns([2, 3])
-
-with cover:
-  # display the image
-  st.image(df_book['Image-URL-L'].iloc[0])
-
-with info:
-  # display the book information
-  st.title(df_book['Book-Title'].iloc[0])
-  st.markdown(df_book['Book-Author'].iloc[0])
-  st.caption(str(df_book['Year-Of-Publication'].iloc[0]) + ' | ' + df_book['Publisher'].iloc[0])
-
-st.subheader('Keep digging your favorite authors')
-userid = st.session_state['User-ID']
-df = df_books_ratings[df_books_ratings['User-ID'] == userid]
-df = df.merge(df_books, on='ISBN')
-authors = df['Book-Author'].unique()
-titles = df['Book-Title']
-rs = df_books[df_books['Book-Author'].isin(authors) & ~df_books['Book-Title'].isin(titles)]
-rs = rs.sample(10)
-print(rs)
-t.recommendations(rs)
-
-st.subheader('Trending among your friends')
-friends = st.session_state['Friends']
-df = df_books_ratings[df_books_ratings['User-ID'].isin(friends)]
-df = df.merge(df_books, on='ISBN')
-rs = df.drop_duplicates(subset=['Book-Title'])
-rs = rs.sample(10)
-print(rs)
-t.recommendations(rs)
-
-st.subheader('People with common interests read' , st.session_state['ISBN'])
-isbn = st.session_state['ISBN'] 
-dict_isbn_groups = df_books_ratings.groupby(['ISBN'])['User-ID'].aggregate(lambda x: list(x)) # create the dictionary
-title = df_books[df_books['ISBN']==isbn]['Book-Title'].values
-diff_editions = df_books[((df_books['Book-Title'].isin(title)) & (df_books['ISBN']!=isbn))]['ISBN'].values  # find for different editions of the same book
-flag = False
-if isbn in(dict_isbn_groups.keys()): # if our isbn is in our dict continue
-  pass
-else:   # if not try the other editions
-  for i in range(len(diff_editions)):
-      if diff_editions[i] in(dict_isbn_groups.keys()):
-          isbn = diff_editions[i]
-          flag  = True
-  if flag == False:  # if there aren't any other editions, choose a random 
-      isbn = random.choice(list(dict_isbn_groups.keys()))
-
-lst = []
-for book, users in dict_isbn_groups.items():
-    d = jaccard_distance(dict_isbn_groups[isbn], users)
-    if book != isbn and d > 0.0 and d < 0.8:
-        d = jaccard_distance(dict_isbn_groups[isbn], users)
-        lst.append([book, d])
-
-jaccard = pd.DataFrame(lst, columns=['ISBN', 'Jaccard Distance'])
-jaccard = jaccard.sort_values(by="Jaccard Distance", ascending=False).head(10)
-rs = df_books[df_books['ISBN'].isin(jaccard['ISBN'])]
-df = rs.head(10)
-print(df)
-t.recommendations(df)
+ratings.tail()
 
 
 
-# Define the sidebar buttons / text inputs
-userid = st.sidebar.text_input("User-ID", placeholder="Currently logged in as user: 98783")
-log_in_clicked = st.sidebar.button("Log In")
-if log_in_clicked:
-  if userid.isdigit() and int(userid) in df_books_ratings['User-ID'].unique():
-    t.select_user(int(userid))
-  elif userid.isdigit() and int(userid) in df_users['User-ID'].unique():
-    t.welcome_user()
-  else:
-    t.wrong_credentials()
+def array_distance(a,b):
+  return np.linalg.norm(a - b)
 
-friendid = st.sidebar.text_input("Let's find your friends!", placeholder="[277427, 278026, 277523, 276680]")
-add_clicked = st.sidebar.button("Add")
-if add_clicked:
-  if friendid.isdigit() and int(friendid) in friends_list:
-    t.already_added()
-  elif friendid.isdigit() and int(friendid) in df_books_ratings['User-ID'].unique():
-    friends_list.append(friendid)
-    t.add_friend(int(friends_list))
-  else:
-    t.friend_not_found()
+# Testing function
+
+a=np.array([3, 4, 5, 3, 2, 4])
+b = np.array([4, 4, 4, 3, 2, 2])
+
+array_distance(a, b)
+
+
+def ratings_from_user(userID):
+  ratings_from_user = ratings.query("userID==%d" % userID)
+  ratings_from_user = ratings_from_user[["bookRating"]]
+  return ratings_from_user
+
+#Testing
+ratings_from_user(276704)
+
+
+distance_test = ratings_from_user(276729).join(ratings_from_user(276729), rsuffix="_A", lsuffix="_B")
+
+array_distance(distance_test["bookRating_B"], distance_test['bookRating_A'])
+
+
+
+def distance_between_users(user1:int, user2:int): 
+  ratings_from_user1 = ratings_from_user(user1)
+  ratings_from_user2 = ratings_from_user(user2)
+
+
+ 
+  both_ratings = ratings_from_user1.join(ratings_from_user2, lsuffix="_A", rsuffix="_B").dropna()
+
+  
+  distance = array_distance(both_ratings["bookRating_A"], both_ratings["bookRating_B"])
+
+  return [user1, user2, distance]
+
+
+distance_between_users(276729, 276704)
+
+
+
+print ("We have %d users" %len(ratings["userID"].unique()))
+
+def distance_from_all(targetID:int):
+  all_users = ratings["userID"].unique()[:3000] 
+
+  distances = [distance_between_users(targetID, users) for users in all_users]
+
+  distances = pd.DataFrame(distances, columns = ["targetID", "otherUserID", "distance"])
+
+  return distances.set_index("otherUserID").sort_values("distance").query("distance>0")
+
+distance_from_all(276704)
+
+
+def suggest_to(userID:int):
+  
+  similar_users = distance_from_all(userID).head(3)
+  similar_users_list = similar_users.index
+  
+  ratings_from_similar_users = ratings[ratings["userID"].isin(similar_users_list)]
+
+  suggestions = ratings_from_similar_users.groupby("ISBN").mean()[["bookRating"]]
+  suggestions = suggestions.sort_values("bookRating", ascending=False)
+
+  
+
+  return suggestions.join(books[["bookTitle", "bookAuthor", "yearOfPublication"]])
+
+suggest_to(276704)
+
+
+
+
